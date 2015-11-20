@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/nav_my_items" android:icon="@drawable/ic_items"
+            app:actionLayout="@layout/menu_counter"
+            android:title="@string/nav_my_items" />
+        <item android:id="@+id/nav_market" android:icon="@drawable/ic_market"
+            android:title="@string/nav_market" />
+        <item android:id="@+id/nav_approval" android:icon="@drawable/ic_incoming"
+            android:title="@string/nav_approval" />
+        <item android:id="@+id/nav_pending_orders" android:icon="@drawable/ic_outgoing"
+            android:title="@string/nav_pending_orders" />
+
+        <item android:id="@+id/nav_approved" android:icon="@drawable/ic_incoming"
+            android:title="@string/nav_approved" />
+        <item android:id="@+id/nav_my_old_requests" android:icon="@drawable/ic_outgoing"
+            android:title="@string/nav_orders_history" />
+    </group>
+
+</menu>
