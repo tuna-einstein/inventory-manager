@@ -129,7 +129,7 @@ public class ListRequestFragment extends BaseFragment {
     public void onDetach() {
         super.onDetach();
         listener = null;
-       // adapter.cleanup();
+        adapter.cleanup();
     }
 
 }

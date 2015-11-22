@@ -46,7 +46,7 @@
         android:textColor="#666666"
         android:textSize="13dip" />
 
-    <!-- units -->
+    <!-- pending requests -->
     <TextView
         android:id="@+id/pending_request"
         android:layout_width="fill_parent"

@@ -64,7 +64,7 @@ public class ItemViewHolder extends RecyclerView.ViewHolder {
             if (item.getOwnerId().equals(uid)) {
                 v.getContext().startActivity(AddItemActivity.getIntent(v.getContext(), item));
             } else {
-                v.getContext().startActivity(PlaceOrderActivity.getIntent(v.getContext(), item));
+                v.getContext().startActivity(PlaceOrderActivity.getIntent(v.getContext(), item, null));
             }
         }
     };

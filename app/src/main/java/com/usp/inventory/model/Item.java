@@ -11,7 +11,6 @@ public class Item implements Parcelable {
     private String id;
     private String name;
     private String description1;
-    private String description2;
     private String ownerId;
     private int units;
 
@@ -47,14 +46,6 @@ public class Item implements Parcelable {
         this.description1 = description1;
     }
 
-    public String getDescription2() {
-        return description2;
-    }
-
-    public void setDescription2(String description2) {
-        this.description2 = description2;
-    }
-
     public int getUnits() {
         return units;
     }
@@ -74,7 +65,6 @@ public class Item implements Parcelable {
         dest.writeString(this.id);
         dest.writeString(this.name);
         dest.writeString(this.description1);
-        dest.writeString(this.description2);
         dest.writeString(this.ownerId);
         dest.writeInt(this.units);
     }
@@ -86,7 +76,6 @@ public class Item implements Parcelable {
         this.id = in.readString();
         this.name = in.readString();
         this.description1 = in.readString();
-        this.description2 = in.readString();
         this.ownerId = in.readString();
         this.units = in.readInt();
     }

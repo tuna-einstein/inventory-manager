@@ -12,6 +12,7 @@ import com.firebase.client.ValueEventListener;
 import com.usp.inventory.FirebaseRefs;
 import com.usp.inventory.R;
 import com.usp.inventory.activity.AcceptOrderActivity;
+import com.usp.inventory.activity.PlaceOrderActivity;
 import com.usp.inventory.model.Item;
 import com.usp.inventory.model.ItemRequest;
 import com.usp.inventory.model.User;
@@ -104,6 +105,10 @@ public class ItemRequestViewHolder extends RecyclerView.ViewHolder {
                     && itemRequest.getStatus() == 0) {
                 v.getContext().startActivity(
                         AcceptOrderActivity.getIntent(v.getContext(), item, requester, itemRequest));
+            } else if (type == ItemRequestAdapter.Type.ORDER
+                    && itemRequest.getStatus() == 0) {
+                v.getContext().startActivity(
+                        PlaceOrderActivity.getIntent(v.getContext(), item, itemRequest));
             }
         }
     };

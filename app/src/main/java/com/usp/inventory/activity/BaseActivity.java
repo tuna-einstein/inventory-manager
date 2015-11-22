@@ -117,7 +117,7 @@ public abstract class BaseActivity extends AppCompatActivity
         }
     }
 
-    private void pickUserAccount(String descriptionOverrideText) {
+    public void pickUserAccount(String descriptionOverrideText) {
         String[] allowableAccountTypes = new String[]{GOOGLE_ACCOUNT_TYPE};
         Intent intent = AccountPicker.newChooseAccountIntent(
                 null, null, allowableAccountTypes, false, descriptionOverrideText, null, null, null);

@@ -14,7 +14,7 @@
 
     <string name="please_pick_account">You have to pick an account to use this application.</string>
 
-    <string name="nav_market">Market</string>
+    <string name="nav_market">People</string>
     <string name="nav_my_approvals">My Approvals</string>
     <string name="nav_my_orders">My Orders</string>
     <string name="nav_my_items">My items</string>

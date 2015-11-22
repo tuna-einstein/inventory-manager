@@ -23,8 +23,7 @@ public class AddItemActivity extends BaseActivity {
 
     private static final String ITEM_KEY = "item";
 
-    @Bind(R.id.txt_description1) EditText description1;
-    @Bind(R.id.txt_description2) EditText description2;
+    @Bind(R.id.txt_description) EditText description1;
     @Bind(R.id.txt_item_name) EditText name;
     @Bind(R.id.editText_enter_units) EditText units;
     @Bind(R.id.button_add) Button addbutton;
@@ -44,7 +43,6 @@ public class AddItemActivity extends BaseActivity {
         if (item != null) {
             setTitle("Update item");
             description1.setText(item.getDescription1());
-            description2.setText(item.getDescription2());
             name.setText(item.getName());
             units.setText(String.valueOf(item.getUnits()));
             addbutton.setText("Update");
@@ -62,7 +60,6 @@ public class AddItemActivity extends BaseActivity {
             item = new Item();
         }
         item.setDescription1(description1.getText().toString());
-        item.setDescription2(description2.getText().toString());
         item.setName(name.getText().toString().toLowerCase());
         item.setUnits(Integer.valueOf(units.getText().toString()));
         item.setOwnerId(sharedPreferencesStore.getUid());

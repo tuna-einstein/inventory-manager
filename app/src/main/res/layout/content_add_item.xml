@@ -16,7 +16,7 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
-        tools:context=".MainActivity" >
+        tools:context=".AddItemActivity" >
 
         <EditText
             android:id="@+id/txt_item_name"
@@ -27,14 +27,14 @@
             android:layout_marginRight="15dp"
             android:layout_marginTop="5dp"
             android:inputType="text"
-            android:hint="Enter Name"
+            android:hint="Name"
             android:textSize="17sp"
             android:ems="10" >
             <requestFocus />
         </EditText>
 
         <EditText
-            android:id="@+id/txt_description1"
+            android:id="@+id/txt_description"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
@@ -44,22 +44,7 @@
             android:layout_marginTop="5dp"
             android:inputType="text"
             android:textSize="17sp"
-            android:hint="Enter description1"
-            android:ems="10" >
-        </EditText>
-
-        <EditText
-            android:id="@+id/txt_description2"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_below="@+id/txt_description1"
-            android:layout_marginLeft="15dp"
-            android:layout_marginRight="15dp"
-            android:layout_marginTop="5dp"
-            android:inputType="text"
-            android:textSize="17sp"
-            android:hint="Enter description2"
+            android:hint="Description"
             android:ems="10" >
         </EditText>
 
@@ -68,12 +53,12 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_below="@+id/txt_description2"
+            android:layout_below="@+id/txt_description"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
             android:layout_marginTop="5dp"
             android:inputType="number"
-            android:hint="Enter units"
+            android:hint="Units"
             android:textSize="17sp"
             android:ems="10" >
         </EditText>

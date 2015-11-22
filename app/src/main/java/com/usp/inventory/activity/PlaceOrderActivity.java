@@ -1,8 +1,6 @@
 package com.usp.inventory.activity;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
@@ -24,13 +22,12 @@ import butterknife.OnClick;
 public class PlaceOrderActivity extends BaseActivity {
 
     private static final String ITEM_ID = "item_id";
+    private static final String ITEM_REQUEST = "item_request";
     private static final String ITEM_DESC1_KEY = "desc1";
-    private static final String ITEM_DESC2_KEY = "desc2";
     private static final String ITEM_NAME_KEY = "name";
     private static final String ITEM_OWNER_ID_KEY = "owner_id";
 
-    @Bind(R.id.txt_description1) TextView description1;
-    @Bind(R.id.txt_description2) TextView description2;
+    @Bind(R.id.txt_description) TextView description1;
     @Bind(R.id.txt_item_name) TextView itemNameTextView;
     @Bind(R.id.editText_enter_units) EditText units;
     @Bind(R.id.button_place_order)
@@ -40,19 +37,23 @@ public class PlaceOrderActivity extends BaseActivity {
     private String ownerId;
     private String itemId;
     private String itemName;
+    private ItemRequest itemRequest;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         itemId = getIntent().getStringExtra(ITEM_ID);
         String desc1 = getIntent().getStringExtra(ITEM_DESC1_KEY);
-        String desc2 = getIntent().getStringExtra(ITEM_DESC2_KEY);
         itemName = getIntent().getStringExtra(ITEM_NAME_KEY);
         ownerId = getIntent().getStringExtra(ITEM_OWNER_ID_KEY);
-
         description1.setText(desc1);
-        description2.setText(desc2);
         itemNameTextView.setText(itemName);
+        itemRequest = getIntent().getParcelableExtra(ITEM_REQUEST);
+        if (itemRequest != null) {
+            orderButton.setText("Update");
+            setTitle("Update order");
+            units.setText(String.valueOf(itemRequest.getUnits()));
+        }
     }
 
     @Override
@@ -60,36 +61,40 @@ public class PlaceOrderActivity extends BaseActivity {
         return R.layout.activity_place_order;
     }
 
-    public static Intent getIntent(Context context, Item item) {
+    public static Intent getIntent(Context context, Item item, ItemRequest itemRequest) {
         Intent intent = new Intent(context, PlaceOrderActivity.class);
         intent.putExtra(ITEM_ID, item.getId());
         intent.putExtra(ITEM_NAME_KEY, item.getName());
         intent.putExtra(ITEM_DESC1_KEY, item.getDescription1());
-        intent.putExtra(ITEM_DESC2_KEY, item.getDescription2());
         intent.putExtra(ITEM_OWNER_ID_KEY, item.getOwnerId());
+        if (itemRequest != null) {
+            intent.putExtra(ITEM_REQUEST, itemRequest);
+        }
         return intent;
     }
 
     @OnClick(R.id.button_place_order)
     public void onPlaceOrder() {
-        final ItemRequest itemRequest = new ItemRequest();
+        if (itemRequest == null) {
+            itemRequest = new ItemRequest();
+            Firebase ref = firebaseRefs.getOrdersRef().push();
+            itemRequest.setId(ref.getKey());
+        }
         itemRequest.setItemOwnerId(ownerId);
         itemRequest.setRequesterId(sharedPreferencesStore.getUid());
         itemRequest.setItemId(itemId);
         itemRequest.setUnits(Integer.valueOf(units.getText().toString()));
 
-        Firebase ref = firebaseRefs.getOrdersRef().push();
-        itemRequest.setId(ref.getKey());
-
         setTitle("Please wait....");
         orderButton.setEnabled(false);
 
-        ref.setValue(itemRequest, new Firebase.CompletionListener() {
-            @Override
-            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                finish();
-            }
-        });
+        firebaseRefs.getOrdersRef().child(itemRequest.getId())
+                .setValue(itemRequest, new Firebase.CompletionListener() {
+                    @Override
+                    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                        finish();
+                    }
+                });
 
 //        Map<String, Object> itemRequest = new HashMap<String, Object>();
 //        itemRequest.put("itemOwnerId", ownerId);

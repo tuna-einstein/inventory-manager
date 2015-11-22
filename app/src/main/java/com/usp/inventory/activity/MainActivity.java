@@ -11,6 +11,7 @@ import android.text.SpannableString;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import com.firebase.client.ChildEventListener;
@@ -27,6 +28,7 @@ import com.usp.inventory.fragment.MarketFragment;
 import com.usp.inventory.model.Item;
 import com.usp.inventory.model.ItemRequest;
 
+import java.util.Comparator;
 import java.util.TreeMap;
 
 import javax.inject.Inject;
@@ -44,9 +46,16 @@ public class MainActivity extends BaseActivity
     @Bind(R.id.drawer_layout) DrawerLayout drawer;
     @Bind(R.id.nav_view) NavigationView navigationView;
 
-    public static TreeMap<String, ItemRequest> myOrders = new TreeMap<>();
-    public static TreeMap<String, ItemRequest> myApprovals = new TreeMap<>();
-    public static TreeMap<String, Item> myItems = new TreeMap<>();
+    private static final Comparator<String> comparator =  new Comparator<String>()
+    {
+        public int compare(String o1, String o2)
+        {
+            return -o1.compareTo(o2);
+        }
+    };
+    public static TreeMap<String, ItemRequest> myOrders = new TreeMap<>(comparator);
+    public static TreeMap<String, ItemRequest> myApprovals = new TreeMap<>(comparator);
+    public static TreeMap<String, Item> myItems = new TreeMap<>(comparator);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -140,9 +149,20 @@ public class MainActivity extends BaseActivity
         super.onFirebaseSetup();
         displayNameTextView.setText(sharedPreferencesStore.getDisplayName());
         emailTextView.setText(sharedPreferencesStore.getAccountName());
+        emailTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickUserAccount(getString(R.string.please_pick_account));
+            }
+        });
         navigationView.getMenu().getItem(0).setChecked(true);
         replaceFragment(ListItemFragment.getInstance(sharedPreferencesStore.getUid(), null));
         setTitle(R.string.nav_my_items);
+        myOrders.clear();
+        myApprovals.clear();
+        myItems.clear();
+        EventBus.getDefault().post(new MessageEvent(EventType.MY_ITEMS_CHANGED));
+
         listenToFirebaseDataChange();
     }
 
