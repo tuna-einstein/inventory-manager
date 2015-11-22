@@ -8,15 +8,10 @@
             android:title="@string/nav_my_items" />
         <item android:id="@+id/nav_market" android:icon="@drawable/ic_market"
             android:title="@string/nav_market" />
-        <item android:id="@+id/nav_approval" android:icon="@drawable/ic_incoming"
-            android:title="@string/nav_approval" />
-        <item android:id="@+id/nav_pending_orders" android:icon="@drawable/ic_outgoing"
-            android:title="@string/nav_pending_orders" />
-
-        <item android:id="@+id/nav_approved" android:icon="@drawable/ic_incoming"
-            android:title="@string/nav_approved" />
-        <item android:id="@+id/nav_my_old_requests" android:icon="@drawable/ic_outgoing"
-            android:title="@string/nav_orders_history" />
+        <item android:id="@+id/nav_my_approvals" android:icon="@drawable/ic_incoming"
+            android:title="@string/nav_my_approvals" />
+        <item android:id="@+id/nav_my_orders" android:icon="@drawable/ic_outgoing"
+            android:title="@string/nav_my_orders" />
     </group>
 
 </menu>

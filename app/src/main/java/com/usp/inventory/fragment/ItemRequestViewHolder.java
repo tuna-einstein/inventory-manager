@@ -1,6 +1,8 @@
 package com.usp.inventory.fragment;
 
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.format.DateFormat;
 import android.view.View;
 import android.widget.TextView;
 
@@ -13,6 +15,9 @@ import com.usp.inventory.activity.AcceptOrderActivity;
 import com.usp.inventory.model.Item;
 import com.usp.inventory.model.ItemRequest;
 import com.usp.inventory.model.User;
+
+import java.util.Calendar;
+import java.util.Locale;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -34,6 +39,13 @@ public class ItemRequestViewHolder extends RecyclerView.ViewHolder {
     @Bind(R.id.units)
     public TextView unitsTextView;
 
+    @Bind(R.id.status)
+    public TextView statusTextView;
+
+    @Bind(R.id.date)
+    public TextView dateTextView;
+
+
     private ItemRequest itemRequest;
     private FirebaseRefs firebaseRefs;
 
@@ -46,32 +58,50 @@ public class ItemRequestViewHolder extends RecyclerView.ViewHolder {
     private Item item;
     private User requester;
     private User itemOwner;
-    private ListRequestFragment.Type type;
+    private ItemRequestAdapter.Type type;
 
     public void setData(ItemRequest itemRequest,
-                        ListRequestFragment.Type type,
+                        ItemRequestAdapter.Type type,
                         FirebaseRefs firebaseRefs) {
         this.itemRequest = itemRequest;
         unitsTextView.setText(String.valueOf(itemRequest.getUnits()));
         this.firebaseRefs = firebaseRefs;
         this.type = type;
+        setDate();
         fetchItem();
-        if (type == ListRequestFragment.Type.INCOMING
-                || type == ListRequestFragment.Type.HISTORY_INCOMING) {
+
+
+        if (type == ItemRequestAdapter.Type.APPROVAL) {
             descriptionLabel.setText("Requester : ");
             fetchRequesterDetails();
         }
-        if (type == ListRequestFragment.Type.OUTGOING
-                || type == ListRequestFragment.Type.HISTORY_OUTGOING) {
+        if (type == ItemRequestAdapter.Type.ORDER) {
             descriptionLabel.setText("Owner : ");
             fetchItemOwnerDetails();
         }
+
+        switch (itemRequest.getStatus()) {
+            case 0 : statusTextView.setText(
+                    Html.fromHtml("status : " + getHtmlText("pending", "red")));
+                break;
+            case 1 : statusTextView.setText(
+                    Html.fromHtml("status : " + getHtmlText("accepted", "green")));
+                break;
+            case 2 : statusTextView.setText(
+                    Html.fromHtml("status : " + getHtmlText("rejected", "blue")));
+                break;
+        }
+    }
+
+    private String getHtmlText(String text, String color) {
+        return String.format("<font color='%s'><b> %s </b> </font>", color, text);
     }
 
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (type == ListRequestFragment.Type.INCOMING) {
+            if (type == ItemRequestAdapter.Type.APPROVAL
+                    && itemRequest.getStatus() == 0) {
                 v.getContext().startActivity(
                         AcceptOrderActivity.getIntent(v.getContext(), item, requester, itemRequest));
             }
@@ -79,7 +109,7 @@ public class ItemRequestViewHolder extends RecyclerView.ViewHolder {
     };
 
     private void fetchItem() {
-        firebaseRefs.getFirebaseItemsRef(itemRequest.getItemOwnerId()).child(itemRequest.getItemId())
+        firebaseRefs.getItemsRef().child(itemRequest.getItemId())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
@@ -128,6 +158,13 @@ public class ItemRequestViewHolder extends RecyclerView.ViewHolder {
                     public void onCancelled(FirebaseError firebaseError) {
                     }
                 });
+    }
+
+    private void setDate() {
+        Calendar cal = Calendar.getInstance(Locale.ENGLISH);
+        cal.setTimeInMillis(itemRequest.getTimeStamp());
+        String date = DateFormat.getMediumDateFormat(dateTextView.getContext()).format(cal.getTime());
+        dateTextView.setText(date);
     }
 }
 

@@ -33,7 +33,7 @@ public class InventoryActivity extends BaseActivity {
         // toolbar.set
 
         //User user = gson.fromJson(getIntent().getStringExtra(USER_KEY), User.class);
-        replaceFragment(ListItemFragment.getInstance(uid));
+        replaceFragment(ListItemFragment.getInstance(uid, null));
     }
 
     @Override

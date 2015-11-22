@@ -17,6 +17,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.AccountPicker;
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.usp.inventory.ApplicationRoot;
 import com.usp.inventory.Constants;
 import com.usp.inventory.FirebaseRefs;
@@ -165,7 +166,7 @@ public abstract class BaseActivity extends AppCompatActivity
                 });
     }
 
-    private void registerFirebase(String token) {
+    private void registerFirebase(final String token) {
         firebaseRefs.getFirebaseRootRef().authWithOAuthToken("google", token,
                 new Firebase.AuthResultHandler() {
                     @Override
@@ -199,13 +200,17 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     private Account getAccountByName(String accountName) {
-        Account[] accounts = accountManager.getAccounts();
-        for (Account account : accounts) {
-            if (account.name.equals(accountName)) {
-                return account;
-            }
+        if (Strings.isNullOrEmpty(accountName)) {
+            return null;
         }
-        return null;
+        return new Account(accountName, GOOGLE_ACCOUNT_TYPE);
+//        Account[] accounts = accountManager.getAccounts();
+//        for (Account account : accounts) {
+//            if (account.name.equals(accountName)) {
+//                return account;
+//            }
+//        }
+//        return null;
     }
 
     protected abstract int getContentView();

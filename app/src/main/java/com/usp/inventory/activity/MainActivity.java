@@ -1,33 +1,52 @@
 package com.usp.inventory.activity;
 
 import android.app.Fragment;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.SearchView;
 import android.text.SpannableString;
-import android.text.style.BackgroundColorSpan;
-import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.firebase.client.ChildEventListener;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.FirebaseError;
+import com.usp.inventory.DataChangeListener;
+import com.usp.inventory.DataChangeListener.OnChangedListener;
 import com.usp.inventory.R;
+import com.usp.inventory.event.MessageEvent;
+import com.usp.inventory.fragment.ItemRequestAdapter;
 import com.usp.inventory.fragment.ListRequestFragment;
 import com.usp.inventory.fragment.ListItemFragment;
 import com.usp.inventory.fragment.MarketFragment;
+import com.usp.inventory.model.Item;
+import com.usp.inventory.model.ItemRequest;
+
+import java.util.TreeMap;
+
+import javax.inject.Inject;
 
 import butterknife.Bind;
+import de.greenrobot.event.EventBus;
+
+import static com.usp.inventory.event.MessageEvent.*;
 
 public class MainActivity extends BaseActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, ChildEventListener {
 
     @Bind(R.id.displayname) TextView displayNameTextView;
     @Bind(R.id.email) TextView emailTextView;
     @Bind(R.id.drawer_layout) DrawerLayout drawer;
     @Bind(R.id.nav_view) NavigationView navigationView;
+
+    public static TreeMap<String, ItemRequest> myOrders = new TreeMap<>();
+    public static TreeMap<String, ItemRequest> myApprovals = new TreeMap<>();
+    public static TreeMap<String, Item> myItems = new TreeMap<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -37,21 +56,7 @@ public class MainActivity extends BaseActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
-
-
-        Menu menuNav = navigationView.getMenu();
-        MenuItem element = menuNav.findItem(R.id.nav_approval);
-        String before = element.getTitle().toString();
-
-        String counter = Integer.toString(5);
-        String s = before + "   "+counter+" ";
-        SpannableString sColored = new SpannableString( s );
-
-        sColored.setSpan(new BackgroundColorSpan(Color.GRAY), s.length() - 3, s.length(), 0);
-        sColored.setSpan(new ForegroundColorSpan(Color.RED), s.length() - 3, s.length(), 0);
-
-
-        element.setTitle(sColored);
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -68,6 +73,21 @@ public class MainActivity extends BaseActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
+        SearchView searchView = (SearchView) menu.findItem(R.id.menu_search).getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                replaceFragment(ListItemFragment.getInstance(null, query));
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -93,7 +113,7 @@ public class MainActivity extends BaseActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_my_items) {
-            replaceFragment(ListItemFragment.getInstance(sharedPreferencesStore.getUid()));
+            replaceFragment(ListItemFragment.getInstance(sharedPreferencesStore.getUid(), null));
             setTitle(R.string.nav_my_items);
         } else if (id == R.id.nav_market) {
             Fragment fragment = new MarketFragment();
@@ -101,18 +121,12 @@ public class MainActivity extends BaseActivity
             fragment.setArguments(args);
             replaceFragment(fragment);
             setTitle(R.string.nav_market);
-        } else if (id == R.id.nav_approval) {
-            replaceFragment(ListRequestFragment.newInstance(ListRequestFragment.Type.INCOMING));
-            setTitle(R.string.nav_approval);
-        } else if (id == R.id.nav_pending_orders) {
-            replaceFragment(ListRequestFragment.newInstance(ListRequestFragment.Type.OUTGOING));
-            setTitle(R.string.nav_pending_orders);
-        } else if (id == R.id.nav_approved) {
-            replaceFragment(ListRequestFragment.newInstance(ListRequestFragment.Type.HISTORY_INCOMING));
-            setTitle(R.string.nav_approved);
-        } else if (id == R.id.nav_my_old_requests) {
-            replaceFragment(ListRequestFragment.newInstance(ListRequestFragment.Type.HISTORY_OUTGOING));
-            setTitle(R.string.nav_orders_history);
+        } else if (id == R.id.nav_my_approvals) {
+            replaceFragment(ListRequestFragment.newInstance(ItemRequestAdapter.Type.APPROVAL));
+            setTitle(R.string.nav_my_approvals);
+        } else if (id == R.id.nav_my_orders) {
+            replaceFragment(ListRequestFragment.newInstance(ItemRequestAdapter.Type.ORDER));
+            setTitle(R.string.nav_my_orders);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -127,12 +141,161 @@ public class MainActivity extends BaseActivity
         displayNameTextView.setText(sharedPreferencesStore.getDisplayName());
         emailTextView.setText(sharedPreferencesStore.getAccountName());
         navigationView.getMenu().getItem(0).setChecked(true);
-        replaceFragment(ListItemFragment.getInstance(sharedPreferencesStore.getUid()));
+        replaceFragment(ListItemFragment.getInstance(sharedPreferencesStore.getUid(), null));
         setTitle(R.string.nav_my_items);
+        listenToFirebaseDataChange();
     }
 
     @Override
     protected int getContentView() {
         return R.layout.activity_main;
+    }
+
+    // This method will be called when a MessageEvent is posted
+    public void onEvent(MessageEvent event){
+        appendInfoToMenu(R.id.nav_my_items,
+                getString(R.string.nav_my_items)
+                        + "  (" + String.valueOf(myItems.size()) + ")");
+        appendInfoToMenu(R.id.nav_my_approvals,
+                getString(R.string.nav_my_approvals)
+                        + "  (" + String.valueOf(getPendingApprovalCount()) + ")");
+        appendInfoToMenu(R.id.nav_my_orders,
+                getString(R.string.nav_my_orders)
+                        + "  (" + String.valueOf(getPendingOrdersCount()) + ")");
+    }
+
+    private void appendInfoToMenu(int menuId, String info) {
+        Menu menuNav = navigationView.getMenu();
+        MenuItem element = menuNav.findItem(menuId);
+        SpannableString sColored = new SpannableString( info );
+        //sColored.setSpan(new BackgroundColorSpan(Color.GRAY), info.length() - 5, info.length(), 0);
+        //sColored.setSpan(new ForegroundColorSpan(Color.RED), info.length() - 5, info.length(), 0);
+        element.setTitle(sColored);
+
+    }
+
+
+
+    private void listenToFirebaseDataChange() {
+        firebaseRefs.getMyOrdersQuery(sharedPreferencesStore.getUid()).addChildEventListener(this);
+        firebaseRefs.getMyApprovalsQuery(sharedPreferencesStore.getUid()).addChildEventListener(this);
+        firebaseRefs.getMyItemsQuery(sharedPreferencesStore.getUid()).addChildEventListener(this);
+    }
+
+    @Override
+    public void onChildAdded(DataSnapshot dataSnapshot, String previousChildKey) {
+        int index = 0;
+        if (isOrdersSnapshot(dataSnapshot)) {
+            ItemRequest itemRequest = dataSnapshot.getValue(ItemRequest.class);
+            if (itemRequest.getRequesterId().equals(sharedPreferencesStore.getUid())) {
+                myOrders.put(dataSnapshot.getKey(), itemRequest);
+                EventBus.getDefault().post(new MessageEvent(EventType.MY_ORDERS_CHANGED));
+            } else {
+                myApprovals.put(dataSnapshot.getKey(), itemRequest);
+                EventBus.getDefault().post(new MessageEvent(EventType.MY_APPROVALS_CHANGED));
+            }
+        }
+
+        if (isItemsSnapshot(dataSnapshot)) {
+            myItems.put(dataSnapshot.getKey(), dataSnapshot.getValue(Item.class));
+            EventBus.getDefault().post(new MessageEvent(EventType.MY_ITEMS_CHANGED));
+        }
+
+    }
+
+    @Override
+    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+        if (isOrdersSnapshot(dataSnapshot)) {
+            ItemRequest itemRequest = dataSnapshot.getValue(ItemRequest.class);
+            if (itemRequest.getRequesterId().equals(sharedPreferencesStore.getUid())) {
+                myOrders.put(dataSnapshot.getKey(), itemRequest);
+                EventBus.getDefault().post(new MessageEvent(EventType.MY_ORDERS_CHANGED));
+            } else {
+                myApprovals.put(dataSnapshot.getKey(), itemRequest);
+                EventBus.getDefault().post(new MessageEvent(EventType.MY_APPROVALS_CHANGED));
+            }
+        }
+
+        if (isItemsSnapshot(dataSnapshot)) {
+            myItems.put(dataSnapshot.getKey(), dataSnapshot.getValue(Item.class));
+            EventBus.getDefault().post(new MessageEvent(EventType.MY_ITEMS_CHANGED));
+        }
+    }
+
+    @Override
+    public void onChildRemoved(DataSnapshot dataSnapshot) {
+        if (isOrdersSnapshot(dataSnapshot)) {
+            ItemRequest itemRequest = dataSnapshot.getValue(ItemRequest.class);
+            if (itemRequest.getRequesterId().equals(sharedPreferencesStore.getUid())) {
+                myOrders.remove(dataSnapshot.getKey());
+                EventBus.getDefault().post(new MessageEvent(EventType.MY_ORDERS_CHANGED));
+            } else {
+                myApprovals.remove(dataSnapshot.getKey());
+                EventBus.getDefault().post(new MessageEvent(EventType.MY_APPROVALS_CHANGED));
+            }
+        }
+
+
+        if (isItemsSnapshot(dataSnapshot)) {
+            myItems.remove(dataSnapshot.getKey());
+            EventBus.getDefault().post(new MessageEvent(EventType.MY_ITEMS_CHANGED));
+        }
+    }
+
+    @Override
+    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+        if (isOrdersSnapshot(dataSnapshot)) {
+            ItemRequest itemRequest = dataSnapshot.getValue(ItemRequest.class);
+            if (itemRequest.getRequesterId().equals(sharedPreferencesStore.getUid())) {
+                myOrders.remove(s);
+                myOrders.put(dataSnapshot.getKey(), itemRequest);
+                EventBus.getDefault().post(new MessageEvent(EventType.MY_ORDERS_CHANGED));
+            } else {
+                myApprovals.remove(s);
+                myApprovals.put(dataSnapshot.getKey(), itemRequest);
+                EventBus.getDefault().post(new MessageEvent(EventType.MY_APPROVALS_CHANGED));
+            }
+        }
+
+        if (isItemsSnapshot(dataSnapshot)) {
+            myItems.remove(s);
+            myItems.put(dataSnapshot.getKey(), dataSnapshot.getValue(Item.class));
+            EventBus.getDefault().post(new MessageEvent(EventType.MY_ITEMS_CHANGED));
+        }
+    }
+
+    @Override
+    public void onCancelled(FirebaseError firebaseError) {
+
+    }
+
+    private boolean isOrdersSnapshot(DataSnapshot snapshot) {
+        return snapshot.getRef().getParent().getPath().equals(
+                firebaseRefs.getOrdersRef().getPath());
+    }
+
+    private boolean isItemsSnapshot(DataSnapshot snapshot) {
+        return snapshot.getRef().getParent().getPath().equals(
+                firebaseRefs.getItemsRef().getPath());
+    }
+
+    private int getPendingApprovalCount() {
+        int count = 0;
+        for (ItemRequest request : myApprovals.values()) {
+            if (request.getStatus() == 0) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int getPendingOrdersCount() {
+        int count = 0;
+        for (ItemRequest request : myOrders.values()) {
+            if (request.getStatus() == 0) {
+                count++;
+            }
+        }
+        return count;
     }
 }

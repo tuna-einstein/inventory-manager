@@ -1,8 +1,5 @@
 package com.usp.inventory.fragment;
 
-import android.app.Activity;
-import android.app.DialogFragment;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -10,12 +7,12 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewStub;
-import android.widget.TextView;
 
-import com.firebase.client.Firebase;
-import com.firebase.ui.FirebaseRecyclerViewAdapter;
+import com.firebase.client.Query;
 import com.usp.inventory.R;
-import com.usp.inventory.model.ItemRequest;
+import com.usp.inventory.activity.MainActivity;
+
+import javax.inject.Inject;
 
 import butterknife.Bind;
 
@@ -27,7 +24,7 @@ import butterknife.Bind;
 public class ListRequestFragment extends BaseFragment {
     private static final String ARG_TYPE = "type";
 
-    private Type type;
+    private ItemRequestAdapter.Type type;
 
     private OnFragmentInteractionListener listener;
 
@@ -36,9 +33,10 @@ public class ListRequestFragment extends BaseFragment {
     @Bind(R.id.stub)
     ViewStub viewStub;
 
-    FirebaseRecyclerViewAdapter adapter;
+    @Inject
+    ItemRequestAdapter adapter;
 
-    public static ListRequestFragment newInstance(Type type) {
+    public static ListRequestFragment newInstance(ItemRequestAdapter.Type type) {
         ListRequestFragment fragment = new ListRequestFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_TYPE, type);
@@ -54,7 +52,7 @@ public class ListRequestFragment extends BaseFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            type = (Type) getArguments().getSerializable(ARG_TYPE);
+            type = (ItemRequestAdapter.Type) getArguments().getSerializable(ARG_TYPE);
         }
     }
 
@@ -64,37 +62,33 @@ public class ListRequestFragment extends BaseFragment {
         super.onActivityCreated(savedInstanceState);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        Firebase ref = null;
+        Query ref = null;
         switch (type) {
-            case INCOMING:
-                ref = firebaseRefs.getFirebaseIncomingRef(sharedPreferencesStore.getUid());
+            case APPROVAL:
+                //ref = firebaseRefs.getMyApprovalsQuery(sharedPreferencesStore.getUid());
+                adapter.setDataAndType(MainActivity.myApprovals, type);
                 break;
-            case OUTGOING:
-                ref = firebaseRefs.getFirebaseOutgoingRef(sharedPreferencesStore.getUid());
-                break;
-            case HISTORY_INCOMING:
-                ref = firebaseRefs.getHistoryIncomingRef(sharedPreferencesStore.getUid());
-                break;
-            case HISTORY_OUTGOING:
-                ref = firebaseRefs.getHistoryOutgoingRef(sharedPreferencesStore.getUid());
+            case ORDER:
+                //ref = firebaseRefs.getMyOrdersQuery(sharedPreferencesStore.getUid());
+                adapter.setDataAndType(MainActivity.myOrders, type);
                 break;
             default:
                 throw new RuntimeException("Invalid type for fragment");
         }
-        adapter = new FirebaseRecyclerViewAdapter<ItemRequest, ItemRequestViewHolder>(
-                ItemRequest.class, R.layout.request_list_item, ItemRequestViewHolder.class, ref) {
-
-            @Override
-            public void populateViewHolder(ItemRequestViewHolder viewHolder, ItemRequest data) {
-                viewHolder.setData(data, type, firebaseRefs);
-            }
-
-            @Override
-            public int getItemViewType(int position) {
-                checkEmpty();
-                return super.getItemViewType(position);
-            }
-        };
+//        adapter = new FirebaseRecyclerViewAdapter<ItemRequest, ItemRequestViewHolder>(
+//                ItemRequest.class, R.layout.request_list_item, ItemRequestViewHolder.class, ref) {
+//
+//            @Override
+//            public void populateViewHolder(ItemRequestViewHolder viewHolder, ItemRequest data) {
+//                viewHolder.setData(data, type, firebaseRefs);
+//            }
+//
+//            @Override
+//            public int getItemViewType(int position) {
+//                checkEmpty();
+//                return super.getItemViewType(position);
+//            }
+//        };
 
         recyclerView.setAdapter(adapter);
         checkEmpty();
@@ -135,13 +129,7 @@ public class ListRequestFragment extends BaseFragment {
     public void onDetach() {
         super.onDetach();
         listener = null;
-        adapter.cleanup();
+       // adapter.cleanup();
     }
 
-    public static enum Type {
-        INCOMING,
-        OUTGOING,
-        HISTORY_INCOMING,
-        HISTORY_OUTGOING
-    }
 }

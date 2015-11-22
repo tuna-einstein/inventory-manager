@@ -73,11 +73,11 @@ public class AcceptOrderActivity extends BaseActivity {
 
         // Update num of units
         Firebase itemRef =
-                firebaseRefs.getFirebaseItemsRef(sharedPreferencesStore.getUid()).child(itemRequest.getItemId());
+                firebaseRefs.getItemsRef().child(itemRequest.getItemId());
         itemRef.runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData currentData) {
-                if(currentData.getValue() == null) {
+                if (currentData.getValue() == null) {
                     Log.w("FIREBASE", "No data found");
                 } else {
                     Item existing = currentData.getValue(Item.class);
@@ -86,6 +86,7 @@ public class AcceptOrderActivity extends BaseActivity {
                 }
                 return Transaction.success(currentData); //we can also abort by calling Transaction.abort()
             }
+
             @Override
             public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
                 if (firebaseError != null) {
@@ -97,28 +98,17 @@ public class AcceptOrderActivity extends BaseActivity {
             }
         });
 
-        itemRequest.setStatus(1);
-        moveToHistory(itemRequest);
-        deleteItemRequest();
+        updateOrder(1);
     }
 
     @OnClick(R.id.button_reject)
     public void onReject() {
-        itemRequest.setStatus(2);
-        moveToHistory(itemRequest);
-        deleteItemRequest();
+        updateOrder(2);
         finish();
     }
 
-    private void deleteItemRequest() {
-        firebaseRefs.getFirebaseIncomingRef(sharedPreferencesStore.getUid())
-                .child(itemRequest.getItemId()).setValue(null);
-        firebaseRefs.getFirebaseOutgoingRef(itemRequest.getRequesterId())
-                .child(itemRequest.getItemId()).setValue(null);
-    }
-
-    private void moveToHistory(ItemRequest itemRequest) {
-        firebaseRefs.getHistoryIncomingRef(sharedPreferencesStore.getUid()).push().setValue(itemRequest);
-        firebaseRefs.getHistoryOutgoingRef(itemRequest.getRequesterId()).push().setValue(itemRequest);
+    private void updateOrder(int status) {
+        itemRequest.setStatus(status);
+        firebaseRefs.getOrdersRef().child(itemRequest.getId()).setValue(itemRequest);
     }
 }

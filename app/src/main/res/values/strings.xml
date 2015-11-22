@@ -15,10 +15,12 @@
     <string name="please_pick_account">You have to pick an account to use this application.</string>
 
     <string name="nav_market">Market</string>
-    <string name="nav_approval">Needs Approval</string>
-    <string name="nav_pending_orders">Pending Orders</string>
+    <string name="nav_my_approvals">My Approvals</string>
+    <string name="nav_my_orders">My Orders</string>
     <string name="nav_my_items">My items</string>
-    <string name="nav_approved">Approval History</string>
-    <string name="nav_orders_history">Orders History</string>
+    <string name="nav_search_items">Search items</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

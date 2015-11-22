@@ -28,30 +28,38 @@ public class UserViewHolder extends RecyclerView.ViewHolder {
     public TextView emailTextView;
 
     private User user;
-    private View view;
+    private String uid;
 
     public UserViewHolder(View userView) {
         super(userView);
         ButterKnife.bind(this, userView);
         userView.setOnClickListener(onClickListener);
-        this.view = userView;
     }
 
     public void setUser(User user, String uid) {
-        if (user.getUid().equals(uid)) {
-            view.setVisibility(View.INVISIBLE);
-        } else {
-            view.setVisibility(View.VISIBLE);
-        }
         this.user = user;
-        nameTextView.setText(user.getDisplayName());
-        emailTextView.setText(user.getEmail());
+        this.uid = uid;
+        if (user.getUid().equals(uid)) {
+            //view.setVisibility(View.GONE);
+            nameTextView.setText("");
+            emailTextView.setText("me");
+
+        } else {
+            nameTextView.setText(user.getDisplayName());
+            emailTextView.setText(user.getEmail());
+        }
+
+
     }
 
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            v.getContext().startActivity(InventoryActivity.getIntent(v.getContext(), user));
+            if (user.getUid().equals(uid)) {
+                // Do nothing
+            } else {
+                v.getContext().startActivity(InventoryActivity.getIntent(v.getContext(), user));
+            }
         }
     };
 }

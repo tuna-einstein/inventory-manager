@@ -46,4 +46,16 @@
         android:textColor="#666666"
         android:textSize="13dip" />
 
+    <!-- units -->
+    <TextView
+        android:id="@+id/pending_request"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/units"
+        android:layout_marginTop="5dp"
+        android:layout_toRightOf="@+id/thumbnail"
+        android:textColor="@android:color/holo_red_dark"
+        android:text="My order : 30"
+        android:textSize="13dip" />
+
 </RelativeLayout>

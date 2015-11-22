@@ -1,8 +1,7 @@
 package com.usp.inventory;
 
 import com.firebase.client.Firebase;
-
-import javax.inject.Inject;
+import com.firebase.client.Query;
 
 /**
  * Created by umasankar on 11/15/15.
@@ -15,8 +14,33 @@ public class FirebaseRefs {
         this.firebaseRootRef = firebaseRootRef;
     }
 
-    public Firebase getFirebaseItemsRef(String uid) {
-        return firebaseRootRef.child("items").child(uid);
+    public Firebase getItemsRef() {
+        return firebaseRootRef.child("items");
+    }
+
+    public Firebase getOrdersRef() {
+        return firebaseRootRef.child("orders");
+    }
+
+    public Query getMyOrdersQuery(String uid) {
+        return getOrdersRef()
+                .orderByChild("requesterId")
+                .startAt(uid)
+                .endAt(uid);
+    }
+
+    public Query getMyApprovalsQuery(String uid) {
+        return getOrdersRef()
+                .orderByChild("itemOwnerId")
+                .startAt(uid)
+                .endAt(uid);
+    }
+
+    public Query getMyItemsQuery(String uid) {
+        return getItemsRef()
+                .orderByChild("ownerId")
+                .startAt(uid)
+                .endAt(uid);
     }
 
     public Firebase getFirebaseOutgoingRef(String uid) {
